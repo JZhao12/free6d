@@ -1,0 +1,11 @@
+defaults:
+  - user: default
+  - machine: local
+  - data: bop
+  - model: free6d
+  - _self_
+
+save_dir: ${machine.root_dir}/results/${name_exp}
+name_exp: seg_exps
+# BOP dataset to evaluate, e.g. `python run_inference.py dataset_name=ycbv`
+dataset_name: ???

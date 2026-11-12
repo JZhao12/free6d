@@ -1,0 +1,16 @@
+{
+  "AP": 0.563,
+  "AP50": 0.706,
+  "AP75": 0.656,
+  "AP_large": 0.758,
+  "AP_medium": 0.576,
+  "AP_small": 0.001,
+  "AR1": 0.593,
+  "AR10": 0.598,
+  "AR100": 0.598,
+  "AR_large": 0.821,
+  "AR_medium": 0.6,
+  "AR_small": 0.019,
+  "average_time_per_image": 1.235,
+  "_source": "BOP website (bop.felk.cvut.cz), 2D segmentation task, eval_bop22_coco.py, 2026-11-12"
+}

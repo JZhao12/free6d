@@ -1,0 +1,4 @@
+dinov3_repo: ./dinov3_repo
+sam2_repo: ./sam2_repo
+# BOP datasets, templates and results live under this folder
+local_root_dir: ./datasets/bop23_challenge

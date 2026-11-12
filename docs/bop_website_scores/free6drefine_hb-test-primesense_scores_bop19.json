@@ -1,0 +1,8 @@
+{
+  "bop19_average_recall": 0.646,
+  "bop19_average_recall_mspd": 0.713,
+  "bop19_average_recall_mssd": 0.628,
+  "bop19_average_recall_vsd": 0.598,
+  "bop19_average_time_per_image": 2.6,
+  "_source": "BOP website (bop.felk.cvut.cz), model-based 6D localization of unseen objects, eval_bop19_pose.py, 2026-11-12"
+}

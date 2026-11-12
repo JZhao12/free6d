@@ -1,0 +1,7 @@
+defaults:
+  - user: default
+  - model: free6d
+  - _self_
+
+# inference_custom.py writes next to the templates, the detector's log_dir is not used there
+save_dir: null

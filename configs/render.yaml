@@ -1,0 +1,20 @@
+# config of src/scripts/render_template_with_pyrender.py
+defaults:
+  - user: default
+  - machine: local
+  - data: bop
+  - model: free6d # data/bop.yaml interpolates model.* (template level, image size)
+  - _self_
+
+save_dir: null # referenced by model/free6d.yaml (log_dir); unused when rendering
+
+# Rendering density, NOT the number of templates used at inference time.
+# Level 2 renders all 642 views once; the 42 (level 0) and 162 (level 1) views are exact
+# subsets of them, so run_inference.py picks the subset given by
+# model.onboarding_config.level_templates (default 0 = 42 views) without re-rendering.
+level: 2
+disable_output: true
+num_workers: 4
+gpus: "0"
+# a BOP dataset name, or `all` for the seven BOP'23 core datasets
+dataset_name: ???
