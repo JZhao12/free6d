@@ -1,6 +1,23 @@
-# Free6D: training-free object localisation and 6D pose estimation with vision foundation models
+<div align="center">
+
+<h1>Free6D: Training-Free Object Localisation and 6D Pose Estimation with Vision Foundation Models</h1>
 
 <p><b>Author:</b> <a href="https://scholar.google.com/citations?user=b6qSMLwAAAAJ&hl=en">Jianyu Zhao</a>, assisted by Claude Code.</p>
+
+<p>
+<img alt="training-free" src="https://img.shields.io/badge/training--free-zero--shot-2ea44f">
+<img alt="SAM 2.1" src="https://img.shields.io/badge/SAM-2.1-0467DF">
+<img alt="DINOv3 ViT-L/16" src="https://img.shields.io/badge/DINOv3-ViT--L%2F16-7B61FF">
+<img alt="PyTorch 2.8" src="https://img.shields.io/badge/PyTorch-2.8-EE4C2C?logo=pytorch&logoColor=white">
+<img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow">
+</p>
+
+<p>
+<img src="media/free6d_teaser.jpg" width="100%" alt="Free6D on a BOP test image: RGB image, localisation, 6D pose"><br>
+<sub>A YCB-V test image, its SAM 2.1 masks labelled by DINOv3, and the CAD models rendered at the estimated 6D poses with their 3D boxes.</sub>
+</p>
+
+</div>
 
 Free6D localises unseen objects in a single RGB image and estimates their 6D pose from a CAD model
 alone. It runs on two frozen vision foundation models, **SAM 2.1** (Hiera-L) and **DINOv3**
@@ -17,8 +34,7 @@ by rendering 42 views of its CAD model.
 One DINOv3 backbone tells which object a mask shows (class token) and how it is posed (patch tokens),
 and both stages share the same 42 templates.
 
-<details>
-<summary><h2>Results</h2></summary>
+## 📊 Results
 
 Evaluated on the seven BOP'23 core datasets (LM-O, T-LESS, TUD-L, IC-BIN, ITODD, HB, YCB-V), BOP'19
 test targets, single RTX 5070. ITODD and HB have no public test ground truth and are scored by the
@@ -33,23 +49,22 @@ BOP website, the other five locally with `bop_toolkit`.
 - **Speed.** About 1.2 s per image for the localisation, plus about 0.1 s per object for the pose
   (0.3 s with refinement).
 
-</details>
-
-<details>
-<summary><h2>Method</h2></summary>
+## 🧩 Method
 
 Input: an RGB image, the camera intrinsics and the CAD models of the objects to find. Output: for
 every instance a mask, a box, the object identity, a confidence and the 6D pose.
 
 ```
-CAD model ──pyrender──▶ 42 template views ──DINOv3──▶ class tokens + patch features with 3D coordinates
-                                                          │
-RGB image ──SAM 2.1 auto-masks──▶ proposals ──DINOv3 class token──▶ matching ──▶ masks + identities
-                                                          │
+CAD model ──pyrender──▶ 42 templates ──DINOv3──▶ class tokens + patch features with 3D coords
+                                                     │
+RGB image ──SAM 2.1──▶ mask proposals ──DINOv3 class token──▶ matching ──▶ masks + identities
+                                                     │
 masked crop (4 rotations) ──DINOv3 patch tokens──▶ mutual nearest neighbours ──▶ 2D-3D matches
-                                                          │
-                 EPnP-RANSAC ──▶ pose ──(optional)──▶ render, compare DINOv3 features, re-match
+                                                     │
+              EPnP-RANSAC ──▶ pose ──(optional)──▶ render, compare DINOv3 features, re-match
 ```
+
+<details><summary>Click to expand</summary>
 
 ### Stage 0: onboarding (once per object)
 
@@ -111,8 +126,12 @@ intermediate block (19) instead of the last one, and both stages share the 42 te
 
 </details>
 
-<details>
-<summary><h2>Layout</h2></summary>
+## 📁 Layout
+
+Two entry points, `run_inference.py` (localisation) and `run_pose.py` (6D pose); the Hydra configs are in
+`configs/`, the code in `src/`. SAM 2, DINOv3 and `bop_toolkit` are cloned next to them during setup.
+
+<details><summary>Click to expand</summary>
 
 ```
 configs/
@@ -151,8 +170,10 @@ src/
   scripts/run_bop_pose.sh          # BOP: 6D pose -> csv -> scores for one dataset
   scripts/eval_bop_pose.sh         # BOP: VSD / MSSD / MSPD average recalls with bop_toolkit, locally
   scripts/summarize_pose_results.py # BOP: 6D pose results table
+  scripts/visualize_results.py     # BOP: figures with the masks and the poses of test images
   scripts/ablate_sam2_ycbv.py      # SAM2 proposal-parameter ablation on a YCB-V subset
   utils/                           # bbox / IO / trimesh helpers
+media/                             # figures of this README
 media/teabox/                      # example CAD model and RGB image
 datasets/bop23_challenge/          # BOP datasets, templates and results (not tracked)
 sam2_repo/                         # SAM2 upstream repo (cloned during setup, not tracked)
@@ -162,10 +183,13 @@ bop_toolkit_repo/                  # bop_toolkit (cloned during setup, not track
 
 </details>
 
-<details>
-<summary><h2>Installation</h2></summary>
+## 📦 Installation
 
-The environment is managed with mamba, named `free6d`, Python 3.10, PyTorch 2.8 with CUDA 12.8.
+The environment is managed with mamba, named `free6d`, Python 3.10, PyTorch 2.8 with CUDA 12.8. SAM 2
+and DINOv3 are cloned into the repository and used with their public weights; `bop_toolkit` is only
+needed for the BOP evaluation.
+
+<details><summary>Click to expand</summary>
 
 ```bash
 git clone https://github.com/JZhao12/free6d.git
@@ -226,8 +250,17 @@ offscreen through EGL; `src/scripts/run_bop_pose.sh` unsets `DISPLAY` for it.
 
 </details>
 
-<details>
-<summary><h2>Usage</h2></summary>
+## 🚀 Usage
+
+Localise your own object from its CAD model and a single RGB image in two commands: render the
+templates, then run the inference. The example uses the tea box in `media/teabox/`.
+
+<p align="center">
+<img src="media/teabox/result.jpg" width="80%" alt="Free6D on the tea box example"><br>
+<sub>The tea box example: input image (left) and the detected object (right).</sub>
+</p>
+
+<details><summary>Click to expand</summary>
 
 Run every command from the repository root with the `free6d` environment active.
 
@@ -271,11 +304,18 @@ and `RADIUS` (camera-to-object distance).
 
 </details>
 
-<details>
-<summary><h2>Testing on BOP datasets</h2></summary>
+## 🧪 Testing on BOP datasets
 
-Everything lives under `configs/user/default.yaml:local_root_dir`
-(`./datasets/bop23_challenge`).
+Localisation on the seven BOP'23 core datasets: download a dataset, render the templates, run the
+inference and score the predictions, with one script or step by step. Everything lives under
+`configs/user/default.yaml:local_root_dir` (`./datasets/bop23_challenge`).
+
+<p align="center">
+<img src="media/free6d_localisation.jpg" width="100%" alt="Free6D localisation on BOP test images"><br>
+<sub>Localisation on test images of the seven BOP datasets: the masks of the detected target objects, one colour per object.</sub>
+</p>
+
+<details><summary>Click to expand</summary>
 
 ### Quick path: one dataset end to end
 
@@ -438,14 +478,20 @@ ground-truth instance, its label is correct 99.9% of the time. Denser point grid
 
 </details>
 
-<details>
-<summary><h2>6D pose estimation (training-free)</h2></summary>
+## 🎯 6D pose estimation (training-free)
 
-`run_pose.py` implements stage 2 of the [Method](#method): the 6D pose of every instance found by the
+`run_pose.py` implements stage 2 of the [Method](#stage-2-6d-pose-per-detected-instance): the 6D pose of every instance found by the
 localisation stage, from the RGB image alone, with the same frozen DINOv3 ViT-L/16 and the same 42
 templates. It follows the template matching + PnP recipe of training-free methods such as
 FoundPose (DINOv2 features) and Pos3R (MASt3R features), with DINOv3 patch features as the
 only matcher.
+
+<p align="center">
+<img src="media/free6d_pose.jpg" width="100%" alt="Free6D 6D poses on BOP test images"><br>
+<sub>6D poses for the same images (with refinement): the CAD models rendered at the estimated poses, outlined in the colour of their object.</sub>
+</p>
+
+<details><summary>Click to expand</summary>
 
 ### Usage
 
@@ -487,6 +533,20 @@ Main options of `run_pose.py`, defaults in brackets:
 
 When test ground truth is available, `run_pose.py` also logs a quick MSSD / MSPD recall and error
 statistics for ablations. The ground truth is never used for the estimates unless `--oracle` is set.
+
+`src/scripts/visualize_results.py` draws the localisation masks and the estimated poses of test images
+(the figures of this README). An image is given as `dataset:scene_id:im_id`; the refined poses are
+drawn by default (`--tag ""` for the coarse ones), and only estimates with a score of at least 0.5
+(`--score_thr`):
+
+```bash
+# one image: input, masks and poses side by side, with 3D boxes
+python -m src.scripts.visualize_results --items ycbv:50:1480 --panels input masks pose \
+  --titles "RGB image" "Localisation" "6D pose" --label none --box --out vis.jpg
+# several images in a grid
+python -m src.scripts.visualize_results --items lmo:2:535 tless:7:348 hb:5:990 ycbv:57:606 \
+  --panels pose --layout grid --cols 4 --panel_width 480 --out grid.jpg
+```
 
 ### Pose results
 
@@ -619,8 +679,12 @@ recalls, no VSD); differences below about 0.02 are within the noise of this subs
 
 </details>
 
-<details>
-<summary><h2>Configuration</h2></summary>
+## 🔧 Configuration
+
+The main switches, all under `configs/`: SAM 2 size and proposal thresholds, DINOv3 size, matching and
+post-processing, trainer precision and the template descriptor caches.
+
+<details><summary>Click to expand</summary>
 
 - `configs/model/segmentor_model/sam2.yaml`: `model_cfg` / `checkpoint_path` select the SAM2 size.
   Switching to `sam2.1_hiera_s.yaml` + `sam2.1_hiera_small.pt` cuts memory use substantially.
@@ -641,8 +705,11 @@ recalls, no VSD); differences below about 0.02 are within the noise of this subs
 
 </details>
 
-<details>
-<summary><h2>Troubleshooting</h2></summary>
+## 🚑 Troubleshooting
+
+Common errors and their fixes.
+
+<details><summary>Click to expand</summary>
 
 - `python: command not found`: the `free6d` environment is not active.
 - Rendering fails with an EGL error: `src/poses/pyrender.py` uses EGL offscreen rendering, which needs
@@ -654,12 +721,10 @@ recalls, no VSD); differences below about 0.02 are within the noise of this subs
 
 </details>
 
-<details>
-<summary><h2>References</h2></summary>
+## 🙏 Acknowledgements
 
-Free6D uses [SAM 2](https://github.com/facebookresearch/sam2) and
-[DINOv3](https://github.com/facebookresearch/dinov3) with their public weights; their licenses apply
-(the DINOv3 weights are governed by the DINOv3 License). The code of this repository is released under
-the MIT license, see `LICENSE`.
+The code is adapted from [CNOS](https://github.com/nv-nguyen/cnos), [SAM 2](https://github.com/facebookresearch/sam2), [DINOv3](https://github.com/facebookresearch/dinov3).
 
-</details>
+Free6D uses SAM 2 and DINOv3 with their public weights; their licenses apply (the DINOv3 weights are
+governed by the DINOv3 License). The code of this repository is released under the MIT license, see
+`LICENSE`.
